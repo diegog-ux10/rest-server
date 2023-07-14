@@ -2,10 +2,22 @@ const { response, request } = require("express");
 const User = require("../models/user");
 const bcryptjs = require("bcryptjs");
 
-const usersGet = (req = request, res = response) => {
-  const params = req.query;
+const usersGet = async (req = request, res = response) => {
+  const { limit = 5, offset = 0 } = req.query;
+  if (!Number(limit) || !Number(offset)) {
+    return res.status(400).json({
+      msg: "Query NaN",
+    });
+  }
+
+  const [total, users] = await Promise.all([
+    User.countDocuments({ state: true }),
+    User.find({ state: true }).skip(offset).limit(limit),
+  ]);
+
   res.json({
-    msg: "get API - Controller",
+    total,
+    users,
   });
 };
 
@@ -25,17 +37,26 @@ const usersPost = async (req, res = response) => {
   }
 };
 
-const usersPut = (req, res = response) => {
+const usersPut = async (req, res = response) => {
   const id = req.params.id;
-  res.json({
-    msg: "put API - Controller",
-    id,
-  });
+  const { _id, password, google, ...rest } = req.body;
+
+  if (password) {
+    const salt = bcryptjs.genSaltSync();
+    rest.password = bcryptjs.hashSync(password, salt);
+  }
+
+  const user = await User.findByIdAndUpdate(id, rest);
+  res.json(user);
 };
 
-const usersDelete = (req, res) => {
+const usersDelete = async (req, res) => {
+  const { id } = req.params;
+  // const user = await User.findByIdAndDelete(id);
+  const user = await User.findByIdAndUpdate(id, { state: false });
+
   res.json({
-    msg: "delete API - Controller",
+    id,
   });
 };
 
