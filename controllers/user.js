@@ -25,7 +25,6 @@ const usersPost = async (req, res = response) => {
   try {
     const { name, email, password, role } = req.body;
     const user = new User({ name, email, password, role });
-
     const salt = bcryptjs.genSaltSync();
     user.password = bcryptjs.hashSync(password, salt);
     await user.save();
@@ -40,12 +39,10 @@ const usersPost = async (req, res = response) => {
 const usersPut = async (req, res = response) => {
   const id = req.params.id;
   const { _id, password, google, ...rest } = req.body;
-
   if (password) {
     const salt = bcryptjs.genSaltSync();
     rest.password = bcryptjs.hashSync(password, salt);
   }
-
   const user = await User.findByIdAndUpdate(id, rest);
   res.json(user);
 };
@@ -54,9 +51,9 @@ const usersDelete = async (req, res) => {
   const { id } = req.params;
   // const user = await User.findByIdAndDelete(id);
   const user = await User.findByIdAndUpdate(id, { state: false });
-
+  // const userAuthenticated = req.user;
   res.json({
-    id,
+    user,
   });
 };
 
