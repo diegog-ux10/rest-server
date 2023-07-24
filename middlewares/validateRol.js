@@ -16,6 +16,23 @@ const validateRol = (request = request, response = response, next) => {
   next();
 };
 
+const hasRole = (...roles) => {
+  return (req, res = response, next) => {
+    if (!request.user) {
+      return res.status(500).json({
+        msg: "Token Error",
+      });
+    }
+    if (!roles.includes(req.user.role)) {
+      return res.status(401).json({
+        msg: `El servicio requiere uno de estos roles ${roles}`,
+      });
+    }
+    next();
+  };
+};
+
 module.exports = {
   validateRol,
+  hasRole,
 };
